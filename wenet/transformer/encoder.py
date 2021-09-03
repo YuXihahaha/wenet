@@ -242,6 +242,9 @@ class BaseEncoder(torch.nn.Module):
                                          pos_emb,
                                          output_cache=attn_cache,
                                          cnn_cache=cnn_cache)
+            #yuxi: 新的两个cache, 下个layer用,
+            #yuxi: r_elayers: 通过返回的xs直接切片
+            #yuxi: cnn_cache: layer返回值直接返回了cnn_cache
             r_elayers_output_cache.append(xs[:, next_cache_start:, :])
             r_conformer_cnn_cache.append(new_cnn_cache)
         if self.normalize_before:

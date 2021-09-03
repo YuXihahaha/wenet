@@ -91,6 +91,12 @@ class TransformerEncoderLayer(nn.Module):
             assert output_cache.size(0) == x.size(0)
             assert output_cache.size(2) == self.size
             assert output_cache.size(1) < x.size(1)
+            #yuxi: 保留的cache长度, 小于一个送进来的数据chunk(这个chunk的T维度: chunk长度+上一层output_cache长度)
+            #yuxi: 如果是第一层, chunk长度是(chunk本身长度 + subsampling输出的cache长度)
+            #yuxi: 如果是2~最后一层, chunk长度是(chunk本身长度+前一层的cache长度)
+            #yuxi: -------
+            #yuxi: x(T=7), output_cache(T=2)
+            #yuxi: chunk:5, x_q = x[-5:] = x[2:] 正好是读进来的整个chunk中新增加的数据!
             chunk = x.size(1) - output_cache.size(1)
             x_q = x[:, -chunk:, :]
             residual = residual[:, -chunk:, :]
@@ -103,7 +109,7 @@ class TransformerEncoderLayer(nn.Module):
             x = residual + self.dropout(self.self_attn(x_q, x, x, mask))
         if not self.normalize_before:
             x = self.norm1(x)
-
+        #yuxi: 这里x的维度(B, chunk长度[time, 不加缓存的长度!, 和最开始的x time维度不一样.], D)
         residual = x
         if self.normalize_before:
             x = self.norm2(x)
@@ -113,6 +119,7 @@ class TransformerEncoderLayer(nn.Module):
 
         if output_cache is not None:
             x = torch.cat([output_cache, x], dim=1)
+        #yuxi: 马上要输出了, 再把这一layer之前保留到cache 和chunk在这一层新算出来的x拼接起来.
 
         fake_cnn_cache = torch.tensor([0.0], dtype=x.dtype, device=x.device)
         return x, mask, fake_cnn_cache
@@ -176,6 +183,7 @@ class ConformerEncoderLayer(nn.Module):
         self.concat_after = concat_after
         self.concat_linear = nn.Linear(size + size, size)
 
+    #yuxi: conformer
     def forward(
         self,
         x: torch.Tensor,
@@ -220,6 +228,13 @@ class ConformerEncoderLayer(nn.Module):
         if output_cache is None:
             x_q = x
         else:
+            #yuxi: 杨超的博客: http://placebokkk.github.io/wenet/2021/06/04/asr-wenet-nn-1.html#offset
+            #yuxi: 保留的cache长度, 小于一个送进来的数据chunk(这个chunk的T维度: chunk长度+上一层output_cache长度)
+            #yuxi: 如果是第一层, chunk长度是(chunk本身长度 + subsampling输出的cache长度)
+            #yuxi: 如果是2~最后一层, chunk长度是(chunk本身长度+前一层的cache长度)
+            #yuxi: -------
+            #yuxi: x(T=7), output_cache(T=2)
+            #yuxi: chunk:5, x_q = x[-5:] = x[2:] 正好是读进来的整个chunk中新增加的数据!   
             assert output_cache.size(0) == x.size(0)
             assert output_cache.size(2) == self.size
             assert output_cache.size(1) < x.size(1)

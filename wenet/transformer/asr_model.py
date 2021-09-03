@@ -33,7 +33,7 @@ from wenet.utils.common import (IGNORE_ID, add_sos_eos, log_add,
 from wenet.utils.mask import (make_pad_mask, mask_finished_preds,
                               mask_finished_scores, subsequent_mask)
 
-
+#yuxi: 杨超的blog:http://placebokkk.github.io/wenet/2021/06/04/asr-wenet-nn-1.html#offset
 class ASRModel(torch.nn.Module):
     """CTC-attention hybrid Encoder-Decoder model"""
     def __init__(
