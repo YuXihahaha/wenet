@@ -236,6 +236,7 @@ class BaseEncoder(torch.nn.Module):
                 cnn_cache = None
             else:
                 cnn_cache = conformer_cnn_cache[i]
+            #yuxi: 此处的xs不是当前chunk, 而是chunk+cache输入, 长度不是chunk_size, 而是chunk_size + required_cache_size.
             xs, _, new_cnn_cache = layer(xs,
                                          masks,
                                          pos_emb,
